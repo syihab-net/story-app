@@ -47,19 +47,22 @@ export function createRouter({ beforeEach } = {}) {
 
     const params = matchRoute(pathname, route.path);
     const allowed = beforeEach ? beforeEach(route) : true;
+    let renderPromise;
 
     if (!allowed) {
       return;
     }
 
     if (document.startViewTransition) {
-      await document.startViewTransition(async () => {
-        await route.render({ params });
-      }).finished;
+      const transition = document.startViewTransition(() => {
+        renderPromise = Promise.resolve(route.render({ params }));
+      });
+      await transition.finished;
     } else {
-      await route.render({ params });
+      renderPromise = Promise.resolve(route.render({ params }));
     }
 
+    await renderPromise;
     document.title = `${route.title} | Dicoding Story`;
     focusRouteContent();
   }

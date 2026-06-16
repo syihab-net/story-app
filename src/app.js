@@ -1,5 +1,6 @@
 import { createRouter } from './router.js';
 import { authStore } from './services/auth-store.js';
+import { deleteSavedStory, saveStory } from './services/idb.js';
 import { state } from './state/app-state.js';
 import { renderLoginPage, renderRegisterPage } from './views/auth.js';
 import { renderHomePage } from './views/home.js';
@@ -24,6 +25,11 @@ export function createApp(root) {
       return true;
     },
   });
+
+  const detailHelpers = {
+    setSavedStories,
+    toggleSavedStory,
+  };
 
   router.addRoute('/', {
     protected: true,
@@ -52,7 +58,7 @@ export function createApp(root) {
   router.addRoute('/stories/:id', {
     protected: true,
     title: 'Story Detail',
-    render: ({ params }) => renderStoryDetailPage(root, params.id),
+    render: ({ params }) => renderStoryDetailPage(root, params.id, detailHelpers),
   });
 
   root.addEventListener('click', (event) => {
@@ -67,4 +73,25 @@ export function createApp(root) {
   });
 
   router.start();
+}
+
+function setSavedStories(stories) {
+  state.savedStories = [...stories].sort((left, right) => {
+    const leftTime = new Date(left.savedAt || left.createdAt || 0).getTime();
+    const rightTime = new Date(right.savedAt || right.createdAt || 0).getTime();
+    return rightTime - leftTime;
+  });
+  state.savedStoryIds = new Set(state.savedStories.map((story) => story.id));
+}
+
+async function toggleSavedStory(story) {
+  if (state.savedStoryIds.has(story.id)) {
+    await deleteSavedStory(story.id);
+    setSavedStories(state.savedStories.filter((item) => item.id !== story.id));
+    return { saved: false, message: 'Saved copy removed.' };
+  }
+
+  const savedRecord = await saveStory(story);
+  setSavedStories([savedRecord, ...state.savedStories.filter((item) => item.id !== story.id)]);
+  return { saved: true, message: 'Story saved for offline reading.' };
 }

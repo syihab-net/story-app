@@ -66,4 +66,24 @@ export const api = {
       token,
     });
   },
+
+  subscribeNotification(payload) {
+    const token = JSON.parse(localStorage.getItem('dicodingstory.session') || 'null')?.token;
+    return request('/notifications/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      token,
+    });
+  },
+
+  unsubscribeNotification(payload) {
+    const token = JSON.parse(localStorage.getItem('dicodingstory.session') || 'null')?.token;
+    return request('/notifications/subscribe', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      token,
+    });
+  },
 };

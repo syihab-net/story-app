@@ -1,6 +1,6 @@
 import { DEFAULT_CENTER, DEFAULT_ZOOM, TILE_LAYERS } from '../config/map.js';
 import { api } from '../services/api.js';
-import { escapeHtml, imageFileToDataUrl, parseErrorMessage, resizeImageFile } from '../services/utils.js';
+import { imageFileToDataUrl, parseErrorMessage, resizeImageFile } from '../services/utils.js';
 import { state } from '../state/app-state.js';
 import { createStoryMap } from '../ui/story-map.js';
 import { renderShell } from './layout.js';
@@ -105,7 +105,7 @@ export async function renderAddStoryPage(root) {
     } catch (error) {
       capturedFile = null;
       photoInput.value = '';
-      mediaPreview.innerHTML = `<p class="muted-copy form-feedback--error">${escapeHtml(parseErrorMessage(error))}</p>`;
+      mediaPreview.innerHTML = `<p class="muted-copy form-feedback--error">${parseErrorMessage(error)}</p>`;
     }
   });
 
@@ -152,9 +152,7 @@ export async function renderAddStoryPage(root) {
       return;
     }
 
-    const file = new File([blob], `camera-story-${Date.now()}.jpg`, {
-      type: 'image/jpeg',
-    });
+    const file = new File([blob], `camera-story-${Date.now()}.jpg`, { type: 'image/jpeg' });
     capturedFile = await resizeImageFile(file);
     mediaPreview.innerHTML = `<img src="${await imageFileToDataUrl(capturedFile)}" alt="Captured story preview" />`;
     feedback.textContent = 'Photo captured from camera.';
@@ -195,12 +193,7 @@ export async function renderAddStoryPage(root) {
         throw new Error('Please click the map to choose a story location first.');
       }
 
-      await api.addStory({
-        description,
-        lat,
-        lon,
-        photo: capturedFile,
-      });
+      await api.addStory({ description, lat, lon, photo: capturedFile });
 
       state.stories = [];
       feedback.textContent = 'Story published successfully.';
